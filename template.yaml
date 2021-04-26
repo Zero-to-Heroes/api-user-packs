@@ -1,0 +1,99 @@
+# https://github.com/awslabs/serverless-application-model/blob/develop/versions/2016-10-31.md
+# Indentation needs to be set with spaces, because YAML...
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: API endpoint for user packs
+
+Globals:
+    Api:
+        # API Gateway regional endpoints
+        EndpointConfiguration: EDGE
+        Cors:
+            AllowMethods: "'*'"
+            AllowHeaders: "'*'"
+            AllowOrigin: "'*'"
+    Function:
+        Environment:
+            Variables:
+                SQS_URL: !Ref SavePacksQueue
+
+Resources:
+    SavePacksQueue:
+        Type: AWS::SQS::Queue
+        Properties:
+            QueueName: deferred-save-packs-queue
+            VisibilityTimeout: 601
+    RetrievePacksFunction:
+        Type: AWS::Serverless::Function
+        Properties:
+            Handler: retrieve-packs.default
+            Runtime: nodejs10.x
+            Timeout: 60
+            MemorySize: 128
+            CodeUri: ./dist/retrieve-packs
+            Policies:
+                - AWSLambdaVPCAccessExecutionRole
+                - AmazonSESFullAccess
+                - AmazonSQSFullAccess
+                - SecretsManagerReadWrite
+                - arn:aws:iam::478062583808:policy/CloudWatchPolicyForLambda # See https://stackoverflow.com/questions/51166504/disable-cloudwatch-to-monitor-logs-for-lambda-function
+            Tags:
+                LambdaName: api-retrieve-packs
+            Events:
+                SavePacksResource:
+                    Type: Api
+                    Properties:
+                        Path: /get/{proxy+}
+                        Method: any
+    StartSavePacksFunction:
+        Type: AWS::Serverless::Function
+        Properties:
+            Handler: start-save-packs.default
+            Runtime: nodejs10.x
+            Timeout: 3
+            MemorySize: 128
+            CodeUri: ./dist/start-save-packs
+            Policies:
+                - AWSLambdaVPCAccessExecutionRole
+                - AmazonSESFullAccess
+                - AmazonSQSFullAccess
+                - SecretsManagerReadWrite
+                - arn:aws:iam::478062583808:policy/CloudWatchPolicyForLambda # See https://stackoverflow.com/questions/51166504/disable-cloudwatch-to-monitor-logs-for-lambda-function
+            Tags:
+                LambdaName: api-start-save-packs
+            Events:
+                SavePacksResource:
+                    Type: Api
+                    Properties:
+                        Path: /save/{proxy+}
+                        Method: any
+    ProcessSavePacksFunction:
+        Type: AWS::Serverless::Function
+        Properties:
+            Handler: process-save-packs.default
+            Runtime: nodejs10.x
+            CodeUri: ./dist/process-save-packs
+            MemorySize: 128
+            ReservedConcurrentExecutions: 5
+            Policies:
+                - AWSLambdaVPCAccessExecutionRole
+                - SecretsManagerReadWrite
+                - AmazonSESFullAccess
+                - AmazonSQSFullAccess
+                # - arn:aws:iam::478062583808:policy/CloudWatchPolicyForLambda # See https://stackoverflow.com/questions/51166504/disable-cloudwatch-to-monitor-logs-for-lambda-function
+            Tags:
+                LambdaName: process-save-packs
+            Timeout: 60
+            Events:
+                SQSEvent:
+                    Type: SQS
+                    Properties:
+                        Queue: !GetAtt SavePacksQueue.Arn
+                        # BatchSize: 1
+
+Outputs:
+    SavePacksApi:
+        Description: URL to save packs
+        Value: !Sub 'https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/packs'
+        Export:
+            Name: SavePacksApi

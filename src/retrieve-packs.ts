@@ -1,0 +1,147 @@
+import { BoosterType } from '@firestone-hs/reference-data';
+import SqlString from 'sqlstring';
+import { gzipSync } from 'zlib';
+import { getConnection } from './db/rds';
+
+export default async (event): Promise<any> => {
+	const mysql = await getConnection();
+	console.log('input', JSON.stringify(event));
+	const escape = SqlString.escape;
+
+	const userInput = JSON.parse(event.body);
+	console.log('getting stats for user', JSON.stringify(userInput));
+	if (!userInput) {
+		console.warn('trying to get match stats without input, returning');
+		return;
+	}
+
+	const [userIds, userNames] = await retrieveFromUserMapping(userInput.userId, userInput.userName, mysql);
+	console.log('built userIds', userIds);
+	console.log('built userNames', userNames);
+	const userIdCriteria = userIds.length === 0 ? '' : `userId IN (${userIds.map(userId => escape(userId)).join(',')})`;
+	const userNameCriteria =
+		userNames.length === 0
+			? ''
+			: userIdCriteria.length
+			? `OR userName IN (${userNames.map(userName => escape(userName)).join(',')})`
+			: `userName IN (${userNames.map(userName => escape(userName)).join(',')})`;
+	const query = `
+		SELECT * FROM pack_stat
+		WHERE (
+			${userIdCriteria}
+			${userNameCriteria}
+		)
+		ORDER BY id DESC;
+	`;
+	console.log('prepared query', query);
+	const dbResults: readonly InternalPackRow[] =
+		userIds.length === 0 && userNames.length === 0 ? [] : await mysql.query(query);
+	console.log('executed query', dbResults && dbResults.length, dbResults && dbResults.length > 0 && dbResults[0]);
+	await mysql.end();
+
+	const results: readonly PackResult[] = dbResults.map(row => buildPackResult(row)).filter(pack => pack);
+	console.log('results', results);
+
+	const stringResults = JSON.stringify({ results });
+	const gzippedResults = gzipSync(stringResults).toString('base64');
+	console.log('compressed', stringResults.length, gzippedResults.length);
+	const response = {
+		statusCode: 200,
+		isBase64Encoded: true,
+		body: gzippedResults,
+		headers: {
+			'Content-Type': 'text/html',
+			'Content-Encoding': 'gzip',
+		},
+	};
+	console.log('sending back success reponse');
+	return response;
+};
+
+const buildPackResult = (row: InternalPackRow): PackResult => {
+	const result = {
+		id: row.id,
+		creationDate: row.creationDate,
+		setId: row.setId,
+		boosterId: row.boosterId,
+		cards: buildCards(row),
+	};
+	return result.cards.every(card => card.cardId != null && card.cardRarity != null && card.cardType != null)
+		? result
+		: null;
+};
+
+const buildCards = (row: InternalPackRow): readonly CardPackResult[] => {
+	const result: CardPackResult[] = [];
+	for (let i = 1; i <= 5; i++) {
+		result.push({
+			cardId: row[`card${i}Id`]?.toUpperCase(),
+			cardRarity: row[`card${i}Rarity`],
+			cardType: row[`card${i}Type`]?.toUpperCase(),
+		});
+	}
+	return result;
+};
+
+const retrieveFromUserMapping = async (
+	userId: string,
+	userName: string,
+	mysql,
+): Promise<[readonly string[], readonly string[]]> => {
+	const escape = SqlString.escape;
+	const query = `
+		SELECT * FROM user_mapping
+		WHERE userId = ${escape(userId)}
+		OR userName = ${escape(userName)}
+	`;
+	console.log('running query', query);
+	const dbResults: readonly any[] = await mysql.query(query);
+	console.log('results', dbResults);
+	const allUserIds: string[] = dbResults
+		.map(result => result.userId)
+		.filter(result => result)
+		.filter(result => result != 'null')
+		.filter(result => result?.length);
+	const allUserNames: string[] = dbResults
+		.map(result => result.userName)
+		.filter(result => result)
+		.filter(result => result != 'null')
+		.filter(result => result?.length);
+	return [[...new Set(allUserIds)], [...new Set(allUserNames)]];
+};
+
+export interface PackResult {
+	readonly id: number;
+	readonly creationDate: number;
+	readonly setId: string;
+	readonly boosterId: BoosterType;
+	readonly cards: readonly CardPackResult[];
+}
+
+export interface CardPackResult {
+	readonly cardId: string;
+	readonly cardRarity: 'common' | 'rare' | 'epic' | 'legendary';
+	readonly cardType: 'NORMAL' | 'GOLDEN';
+}
+
+export interface InternalPackRow {
+	readonly id: number;
+	readonly creationDate: number;
+	readonly setId: string;
+	readonly boosterId: BoosterType;
+	readonly card1Id: string;
+	readonly card1Rarity: 'common' | 'rare' | 'epic' | 'legendary';
+	readonly card1Type: 'normal' | 'golden';
+	readonly card2Id: string;
+	readonly card2Rarity: 'common' | 'rare' | 'epic' | 'legendary';
+	readonly card2Type: 'normal' | 'golden';
+	readonly card3Id: string;
+	readonly card3Rarity: 'common' | 'rare' | 'epic' | 'legendary';
+	readonly card3Type: 'normal' | 'golden';
+	readonly card4Id: string;
+	readonly card4Rarity: 'common' | 'rare' | 'epic' | 'legendary';
+	readonly card4Type: 'normal' | 'golden';
+	readonly card5Id: string;
+	readonly card5Rarity: 'common' | 'rare' | 'epic' | 'legendary';
+	readonly card5Type: 'normal' | 'golden';
+}
