@@ -5,19 +5,15 @@ import { getConnection } from './db/rds';
 
 export default async (event): Promise<any> => {
 	const mysql = await getConnection();
-	console.log('input', JSON.stringify(event));
 	const escape = SqlString.escape;
 
 	const userInput = JSON.parse(event.body);
-	console.log('getting stats for user', JSON.stringify(userInput));
 	if (!userInput) {
 		console.warn('trying to get match stats without input, returning');
 		return;
 	}
 
 	const [userIds, userNames] = await retrieveFromUserMapping(userInput.userId, userInput.userName, mysql);
-	console.log('built userIds', userIds);
-	console.log('built userNames', userNames);
 	const userIdCriteria = userIds.length === 0 ? '' : `userId IN (${userIds.map(userId => escape(userId)).join(',')})`;
 	const userNameCriteria =
 		userNames.length === 0
@@ -33,18 +29,14 @@ export default async (event): Promise<any> => {
 		)
 		ORDER BY id DESC;
 	`;
-	console.log('prepared query', query);
 	const dbResults: readonly InternalPackRow[] =
 		userIds.length === 0 && userNames.length === 0 ? [] : await mysql.query(query);
-	console.log('executed query', dbResults && dbResults.length, dbResults && dbResults.length > 0 && dbResults[0]);
 	await mysql.end();
 
 	const results: readonly PackResult[] = dbResults.map(row => buildPackResult(row)).filter(pack => pack);
-	console.log('results', results);
 
 	const stringResults = JSON.stringify({ results });
 	const gzippedResults = gzipSync(stringResults).toString('base64');
-	console.log('compressed', stringResults.length, gzippedResults.length);
 	const response = {
 		statusCode: 200,
 		isBase64Encoded: true,
@@ -54,7 +46,6 @@ export default async (event): Promise<any> => {
 			'Content-Encoding': 'gzip',
 		},
 	};
-	console.log('sending back success reponse');
 	return response;
 };
 
@@ -94,9 +85,7 @@ const retrieveFromUserMapping = async (
 		WHERE userId = ${escape(userId)}
 		OR userName = ${escape(userName)}
 	`;
-	console.log('running query', query);
 	const dbResults: readonly any[] = await mysql.query(query);
-	console.log('results', dbResults);
 	const allUserIds: string[] = dbResults
 		.map(result => result.userId)
 		.filter(result => result)
