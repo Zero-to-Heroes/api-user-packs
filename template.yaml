@@ -28,7 +28,8 @@ Resources:
         Properties:
             Handler: retrieve-packs.default
             Runtime: nodejs10.x
-            Timeout: 60
+            # API Gateway timeout is 30
+            Timeout: 29
             MemorySize: 128
             CodeUri: ./dist/retrieve-packs
             Policies:
