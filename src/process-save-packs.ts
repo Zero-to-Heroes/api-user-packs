@@ -30,11 +30,11 @@ const processEvent = async (packStat: Input, mysql: ServerlessMysql) => {
 		`
 			INSERT INTO pack_stat 
 			(
-				card1Id, card1Rarity, card1Type, 
-				card2Id, card2Rarity, card2Type,
-				card3Id, card3Rarity, card3Type,
-				card4Id, card4Rarity, card4Type,
-				card5Id, card5Rarity, card5Type,
+				card1Id, card1Rarity, card1Type, card1CurrencyAmount, card1MercenaryCardId, 
+				card2Id, card2Rarity, card2Type, card2CurrencyAmount, card2MercenaryCardId, 
+				card3Id, card3Rarity, card3Type, card3CurrencyAmount, card3MercenaryCardId, 
+				card4Id, card4Rarity, card4Type, card4CurrencyAmount, card4MercenaryCardId, 
+				card5Id, card5Rarity, card5Type, card5CurrencyAmount, card5MercenaryCardId, 
 				creationDate,
 				setId,
 				boosterId,
@@ -43,11 +43,16 @@ const processEvent = async (packStat: Input, mysql: ServerlessMysql) => {
 			)
 			VALUES
 			(
-				${escape(packStat.card1Id)}, ${escape(packStat.card1Rarity)}, ${escape(packStat.card1Type)},
+				${escape(packStat.card1Id)}, ${escape(packStat.card1Rarity)}, ${escape(packStat.card1Type)}, 
+					${escape(packStat.card1CurrencyAmount)}, ${escape(packStat.card1MercenaryCardId)},
 				${escape(packStat.card2Id)}, ${escape(packStat.card2Rarity)}, ${escape(packStat.card2Type)},
+					${escape(packStat.card2CurrencyAmount)}, ${escape(packStat.card2MercenaryCardId)},
 				${escape(packStat.card3Id)}, ${escape(packStat.card3Rarity)}, ${escape(packStat.card3Type)},
+					${escape(packStat.card3CurrencyAmount)}, ${escape(packStat.card3MercenaryCardId)},
 				${escape(packStat.card4Id)}, ${escape(packStat.card4Rarity)}, ${escape(packStat.card4Type)},
+					${escape(packStat.card4CurrencyAmount)}, ${escape(packStat.card4MercenaryCardId)},
 				${escape(packStat.card5Id)}, ${escape(packStat.card5Rarity)}, ${escape(packStat.card5Type)},
+					${escape(packStat.card5CurrencyAmount)}, ${escape(packStat.card5MercenaryCardId)},
 				${escape(packStat.creationDate)}, 
 				${escape(packStat.setId)}, 
 				${escape(packStat.boosterId)}, 

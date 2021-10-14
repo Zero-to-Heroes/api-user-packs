@@ -57,7 +57,10 @@ const buildPackResult = (row: InternalPackRow): PackResult => {
 		boosterId: row.boosterId,
 		cards: buildCards(row),
 	};
-	return result.cards.every(card => card.cardId != null && card.cardRarity != null && card.cardType != null)
+	return result.cards.every(
+		card =>
+			card.mercenaryCardId != null || (card.cardId != null && card.cardRarity != null && card.cardType != null),
+	)
 		? result
 		: null;
 };
@@ -69,6 +72,8 @@ const buildCards = (row: InternalPackRow): readonly CardPackResult[] => {
 			cardId: row[`card${i}Id`]?.toUpperCase(),
 			cardRarity: row[`card${i}Rarity`],
 			cardType: row[`card${i}Type`]?.toUpperCase(),
+			currencyAmount: row[`card${i}CurrencyAmount`],
+			mercenaryCardId: row[`card${i}MercenaryCardId`]?.toUpperCase(),
 		});
 	}
 	return result;
@@ -111,6 +116,8 @@ export interface CardPackResult {
 	readonly cardId: string;
 	readonly cardRarity: 'common' | 'rare' | 'epic' | 'legendary';
 	readonly cardType: 'NORMAL' | 'GOLDEN';
+	readonly currencyAmount: number;
+	readonly mercenaryCardId: number;
 }
 
 export interface InternalPackRow {
@@ -121,16 +128,26 @@ export interface InternalPackRow {
 	readonly card1Id: string;
 	readonly card1Rarity: 'common' | 'rare' | 'epic' | 'legendary';
 	readonly card1Type: 'normal' | 'golden';
+	readonly card1CurrencyAmount: number;
+	readonly card1MercenaryCardId: string;
 	readonly card2Id: string;
 	readonly card2Rarity: 'common' | 'rare' | 'epic' | 'legendary';
 	readonly card2Type: 'normal' | 'golden';
+	readonly card2CurrencyAmount: number;
+	readonly card2MercenaryCardId: string;
 	readonly card3Id: string;
 	readonly card3Rarity: 'common' | 'rare' | 'epic' | 'legendary';
 	readonly card3Type: 'normal' | 'golden';
+	readonly card3CurrencyAmount: number;
+	readonly card3MercenaryCardId: string;
 	readonly card4Id: string;
 	readonly card4Rarity: 'common' | 'rare' | 'epic' | 'legendary';
 	readonly card4Type: 'normal' | 'golden';
+	readonly card4CurrencyAmount: number;
+	readonly card4MercenaryCardId: string;
 	readonly card5Id: string;
 	readonly card5Rarity: 'common' | 'rare' | 'epic' | 'legendary';
 	readonly card5Type: 'normal' | 'golden';
+	readonly card5CurrencyAmount: number;
+	readonly card5MercenaryCardId: string;
 }
