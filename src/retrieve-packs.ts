@@ -117,7 +117,7 @@ export interface CardPackResult {
 	readonly cardRarity: 'common' | 'rare' | 'epic' | 'legendary';
 	readonly cardType: 'NORMAL' | 'GOLDEN';
 	readonly currencyAmount: number;
-	readonly mercenaryCardId: number;
+	readonly mercenaryCardId: string;
 }
 
 export interface InternalPackRow {
