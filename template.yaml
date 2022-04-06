@@ -30,7 +30,7 @@ Resources:
             Runtime: nodejs12.x
             # API Gateway timeout is 30
             Timeout: 29
-            MemorySize: 128
+            MemorySize: 156
             CodeUri: ./dist/retrieve-packs
             Policies:
                 - AWSLambdaVPCAccessExecutionRole
