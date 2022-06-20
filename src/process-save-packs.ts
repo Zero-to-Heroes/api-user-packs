@@ -14,7 +14,7 @@ export default async (event, context): Promise<any> => {
 
 	if (!allCards?.getCards()?.length) {
 		allCards = new AllCardsService();
-		await allCards.initializeCardsDb('2022-03-04-21-04');
+		await allCards.initializeCardsDb();
 	}
 
 	const mysql = await getConnection();
