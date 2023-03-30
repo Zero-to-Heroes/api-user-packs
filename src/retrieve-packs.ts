@@ -13,24 +13,21 @@ export default async (event): Promise<any> => {
 		return;
 	}
 
-	const [userIds, userNames] = await retrieveFromUserMapping(userInput.userId, userInput.userName, mysql);
-	const userIdCriteria = userIds.length === 0 ? '' : `userId IN (${userIds.map(userId => escape(userId)).join(',')})`;
-	const userNameCriteria =
-		userNames.length === 0
-			? ''
-			: userIdCriteria.length
-			? `OR userName IN (${userNames.map(userName => escape(userName)).join(',')})`
-			: `userName IN (${userNames.map(userName => escape(userName)).join(',')})`;
+	const userIds = await getAllUserIds(userInput.userId, userInput.userName, mysql);
+	if (!userIds?.length) {
+		return {
+			statusCode: 200,
+			isBase64Encoded: false,
+			body: JSON.stringify({ results: [] }),
+		};
+	}
+
 	const query = `
 		SELECT * FROM pack_stat
-		WHERE (
-			${userIdCriteria}
-			${userNameCriteria}
-		)
+		WHERE userId IN (${escape(userIds)})
 		ORDER BY id DESC;
 	`;
-	const dbResults: readonly InternalPackRow[] =
-		userIds.length === 0 && userNames.length === 0 ? [] : await mysql.query(query);
+	const dbResults: readonly InternalPackRow[] = await mysql.query(query);
 	await mysql.end();
 
 	const results: readonly PackResult[] = dbResults.map(row => buildPackResult(row)).filter(pack => pack);
@@ -79,29 +76,27 @@ const buildCards = (row: InternalPackRow): readonly CardPackResult[] => {
 	return result;
 };
 
-const retrieveFromUserMapping = async (
-	userId: string,
-	userName: string,
-	mysql,
-): Promise<[readonly string[], readonly string[]]> => {
+const getAllUserIds = async (userId: string, userName: string, mysql): Promise<readonly string[]> => {
 	const escape = SqlString.escape;
-	const query = `
-		SELECT * FROM user_mapping
-		WHERE userId = ${escape(userId)}
-		OR userName = ${escape(userName)}
-	`;
-	const dbResults: readonly any[] = await mysql.query(query);
-	const allUserIds: string[] = dbResults
-		.map(result => result.userId)
-		.filter(result => result)
-		.filter(result => result != 'null')
-		.filter(result => result?.length);
-	const allUserNames: string[] = dbResults
-		.map(result => result.userName)
-		.filter(result => result)
-		.filter(result => result != 'null')
-		.filter(result => result?.length);
-	return [[...new Set(allUserIds)], [...new Set(allUserNames)]];
+	const userSelectQuery = `
+			SELECT DISTINCT userId FROM user_mapping
+			INNER JOIN (
+				SELECT DISTINCT username FROM user_mapping
+				WHERE 
+					(username = ${escape(userName)} OR username = ${escape(userId)} OR userId = ${escape(userId)})
+					AND username IS NOT NULL
+					AND username != ''
+					AND username != 'null'
+					AND userId != ''
+					AND userId IS NOT NULL
+					AND userId != 'null'
+			) AS x ON x.username = user_mapping.username
+			UNION ALL SELECT ${escape(userId)}
+		`;
+	console.log('running query', userSelectQuery);
+	const userIds: any[] = await mysql.query(userSelectQuery);
+	console.log('query over', userIds);
+	return userIds.map(result => result.userId);
 };
 
 export interface PackResult {
