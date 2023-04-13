@@ -93,9 +93,9 @@ const getAllUserIds = async (userId: string, userName: string, mysql): Promise<r
 			) AS x ON x.username = user_mapping.username
 			UNION ALL SELECT ${escape(userId)}
 		`;
-	console.log('running query', userSelectQuery);
+	// console.log('running query', userSelectQuery);
 	const userIds: any[] = await mysql.query(userSelectQuery);
-	console.log('query over', userIds);
+	// console.log('query over', userIds);
 	return userIds.map(result => result.userId);
 };
 

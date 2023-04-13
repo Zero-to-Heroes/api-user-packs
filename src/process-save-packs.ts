@@ -33,7 +33,7 @@ export default async (event, context): Promise<any> => {
 
 const processEvent = async (packStat: Input, mysql: ServerlessMysql) => {
 	const escape = SqlString.escape;
-	console.debug('handling event', packStat);
+	// console.debug('handling event', packStat);
 	await mysql.query(
 		`
 			INSERT INTO pack_stat 
