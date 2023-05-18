@@ -27,7 +27,7 @@ Resources:
         Type: AWS::Serverless::Function
         Properties:
             Handler: retrieve-packs.default
-            Runtime: nodejs12.x
+            Runtime: nodejs16.x
             # API Gateway timeout is 30
             Timeout: 29
             MemorySize: 156
@@ -46,11 +46,29 @@ Resources:
                     Properties:
                         Path: /get/{proxy+}
                         Method: any
+    RetrievePacksFunction2:
+        Type: AWS::Serverless::Function
+        Properties:
+            Handler: retrieve-packs.default
+            Runtime: nodejs16.x
+            CodeUri: ./dist/retrieve-packs
+            Timeout: 5
+            Policies:
+                - AWSLambdaVPCAccessExecutionRole
+                - AmazonSESFullAccess
+                - AmazonSQSFullAccess
+                - SecretsManagerReadWrite
+                # - arn:aws:iam::478062583808:policy/CloudWatchPolicyForLambda # See https://stackoverflow.com/questions/51166504/disable-cloudwatch-to-monitor-logs-for-lambda-function
+            Tags:
+                LambdaName: api-retrieve-packs-2
+            AutoPublishAlias: live
+            FunctionUrlConfig:
+                AuthType: NONE
     StartSavePacksFunction:
         Type: AWS::Serverless::Function
         Properties:
             Handler: start-save-packs.default
-            Runtime: nodejs12.x
+            Runtime: nodejs16.x
             Timeout: 3
             MemorySize: 128
             CodeUri: ./dist/start-save-packs
@@ -68,11 +86,29 @@ Resources:
                     Properties:
                         Path: /save/{proxy+}
                         Method: any
+    StartSavePacksFunction2:
+        Type: AWS::Serverless::Function
+        Properties:
+            Handler: start-save-packs.default
+            Runtime: nodejs16.x
+            CodeUri: ./dist/start-save-packs
+            Timeout: 5
+            Policies:
+                - AWSLambdaVPCAccessExecutionRole
+                - AmazonSESFullAccess
+                - AmazonSQSFullAccess
+                - SecretsManagerReadWrite
+                # - arn:aws:iam::478062583808:policy/CloudWatchPolicyForLambda # See https://stackoverflow.com/questions/51166504/disable-cloudwatch-to-monitor-logs-for-lambda-function
+            Tags:
+                LambdaName: api-start-save-packs-2
+            AutoPublishAlias: live
+            FunctionUrlConfig:
+                AuthType: NONE
     ProcessSavePacksFunction:
         Type: AWS::Serverless::Function
         Properties:
             Handler: process-save-packs.default
-            Runtime: nodejs12.x
+            Runtime: nodejs16.x
             CodeUri: ./dist/process-save-packs
             MemorySize: 128
             ReservedConcurrentExecutions: 5

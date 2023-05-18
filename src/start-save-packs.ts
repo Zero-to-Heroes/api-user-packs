@@ -21,6 +21,7 @@ export default async (event): Promise<any> => {
 		return response;
 	}
 
+	console.debug('received event', event);
 	const input: Input = JSON.parse(event.body);
 	await sqs.sendMessageToQueue(input, process.env.SQS_URL);
 	return {

@@ -19,6 +19,9 @@ export default async (event, context): Promise<any> => {
 
 	const mysql = await getConnection();
 	for (const ev of events) {
+		if (ev.userName === 'daedin') {
+			console.debug('processing event', ev);
+		}
 		await processEvent(ev, mysql);
 	}
 	await mysql.end();
