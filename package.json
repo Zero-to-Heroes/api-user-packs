@@ -1,13 +1,14 @@
 {
 	"name": "@firestone-hs/user-packs",
-	"version": "1.0.1",
+	"version": "1.0.2",
 	"description": "",
 	"scripts": {
 		"lint": "eslint --color --fix --ext .ts .",
 		"build": "webpack --color",
 		"package": "sam package --template-file template.yaml --s3-bucket com.zerotoheroes.artifact --output-template-file template.packaged.yaml",
 		"deploy": "sam deploy --template-file template.packaged.yaml --stack-name UserPacksStack --capabilities CAPABILITY_IAM",
-		"full-deploy": "npm run build && npm run package && npm run deploy"
+		"full-deploy": "npm run build && npm run package && npm run deploy",
+		"publish-version": "rm -rf dist && tsc && rm -rf dist/node_modules && npm publish --access public"
 	},
 	"repository": {},
 	"author": "",

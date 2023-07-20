@@ -30,7 +30,7 @@ export default async (event): Promise<any> => {
 	const dbResults: readonly InternalPackRow[] = await mysql.query(query);
 	await mysql.end();
 
-	const results: readonly PackResult[] = dbResults.map(row => buildPackResult(row)).filter(pack => pack);
+	const results: readonly PackResult[] = dbResults.map((row) => buildPackResult(row)).filter((pack) => pack);
 
 	const stringResults = JSON.stringify({ results });
 	const gzippedResults = gzipSync(stringResults).toString('base64');
@@ -55,7 +55,7 @@ const buildPackResult = (row: InternalPackRow): PackResult => {
 		cards: buildCards(row),
 	};
 	return result.cards.every(
-		card =>
+		(card) =>
 			card.mercenaryCardId != null || (card.cardId != null && card.cardRarity != null && card.cardType != null),
 	)
 		? result
@@ -71,6 +71,8 @@ const buildCards = (row: InternalPackRow): readonly CardPackResult[] => {
 			cardType: row[`card${i}Type`]?.toUpperCase(),
 			currencyAmount: row[`card${i}CurrencyAmount`],
 			mercenaryCardId: row[`card${i}MercenaryCardId`]?.toUpperCase(),
+			isNew: row[`card${i}IsNew`] === 1,
+			isSecondCopy: row[`card${i}IsSecondCopy`] === 1,
 		});
 	}
 	return result;
@@ -96,7 +98,7 @@ const getAllUserIds = async (userId: string, userName: string, mysql): Promise<r
 	// console.log('running query', userSelectQuery);
 	const userIds: any[] = await mysql.query(userSelectQuery);
 	// console.log('query over', userIds);
-	return userIds.map(result => result.userId);
+	return userIds.map((result) => result.userId);
 };
 
 export interface PackResult {
@@ -113,6 +115,8 @@ export interface CardPackResult {
 	readonly cardType: 'NORMAL' | 'GOLDEN';
 	readonly currencyAmount: number;
 	readonly mercenaryCardId: string;
+	readonly isNew: boolean;
+	readonly isSecondCopy: boolean;
 }
 
 export interface InternalPackRow {
@@ -125,24 +129,34 @@ export interface InternalPackRow {
 	readonly card1Type: 'normal' | 'golden';
 	readonly card1CurrencyAmount: number;
 	readonly card1MercenaryCardId: string;
+	readonly card1IsNew: boolean;
+	readonly card1IsSecondCopy: boolean;
 	readonly card2Id: string;
 	readonly card2Rarity: 'common' | 'rare' | 'epic' | 'legendary';
 	readonly card2Type: 'normal' | 'golden';
 	readonly card2CurrencyAmount: number;
 	readonly card2MercenaryCardId: string;
+	readonly card2IsNew: boolean;
+	readonly card2IsSecondCopy: boolean;
 	readonly card3Id: string;
 	readonly card3Rarity: 'common' | 'rare' | 'epic' | 'legendary';
 	readonly card3Type: 'normal' | 'golden';
 	readonly card3CurrencyAmount: number;
 	readonly card3MercenaryCardId: string;
+	readonly card3IsNew: boolean;
+	readonly card3IsSecondCopy: boolean;
 	readonly card4Id: string;
 	readonly card4Rarity: 'common' | 'rare' | 'epic' | 'legendary';
 	readonly card4Type: 'normal' | 'golden';
 	readonly card4CurrencyAmount: number;
 	readonly card4MercenaryCardId: string;
+	readonly card4IsNew: boolean;
+	readonly card4IsSecondCopy: boolean;
 	readonly card5Id: string;
 	readonly card5Rarity: 'common' | 'rare' | 'epic' | 'legendary';
 	readonly card5Type: 'normal' | 'golden';
 	readonly card5CurrencyAmount: number;
 	readonly card5MercenaryCardId: string;
+	readonly card5IsNew: boolean;
+	readonly card5IsSecondCopy: boolean;
 }
