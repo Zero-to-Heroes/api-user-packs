@@ -36,9 +36,27 @@ export default async (event, context): Promise<any> => {
 
 const processEvent = async (packStat: Input, mysql: ServerlessMysql) => {
 	const escape = SqlString.escape;
-	// console.debug('handling event', packStat);
-	await mysql.query(
-		`
+	if (packStat.cardsJson?.length) {
+		// console.log('handling event with cardsJson', packStat.cardsJson);
+		await mysql.query(
+			`
+				INSERT INTO pack_stat
+				(creationDate, setId, boosterId, userId, userName, cardsJson)
+				VALUES (?, ?, ?, ?, ?, ?)
+			`,
+			[
+				packStat.creationDate,
+				packStat.setId,
+				packStat.boosterId,
+				packStat.userId,
+				packStat.userName,
+				JSON.stringify(packStat.cardsJson),
+			],
+		);
+	} else {
+		// console.debug('handling event', packStat);
+		await mysql.query(
+			`
 			INSERT INTO pack_stat 
 			(
 				card1Id, card1Rarity, card1Type, card1CurrencyAmount, card1MercenaryCardId, card1IsNew, card1IsSecondCopy,
@@ -76,7 +94,8 @@ const processEvent = async (packStat: Input, mysql: ServerlessMysql) => {
 				${escape(packStat.userName)}
 			)
 		`,
-	);
+		);
+	}
 };
 
 const checkRarity = (cardId: string, inputRarity: string): string => {

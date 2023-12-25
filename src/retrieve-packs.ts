@@ -47,19 +47,15 @@ export default async (event): Promise<any> => {
 };
 
 const buildPackResult = (row: InternalPackRow): PackResult => {
-	const result = {
+	const result: PackResult = {
 		id: row.id,
 		creationDate: row.creationDate,
 		setId: row.setId,
 		boosterId: row.boosterId,
-		cards: buildCards(row),
+		cards: row.cardsJson?.length ? null : buildCards(row),
+		cardsJson: JSON.parse(row.cardsJson),
 	};
-	return result.cards.every(
-		(card) =>
-			card.mercenaryCardId != null || (card.cardId != null && card.cardRarity != null && card.cardType != null),
-	)
-		? result
-		: null;
+	return result;
 };
 
 const buildCards = (row: InternalPackRow): readonly CardPackResult[] => {
@@ -107,6 +103,7 @@ export interface PackResult {
 	readonly setId: string;
 	readonly boosterId: BoosterType;
 	readonly cards: readonly CardPackResult[];
+	readonly cardsJson: readonly PackCardInfo[];
 }
 
 export interface CardPackResult {
@@ -118,6 +115,16 @@ export interface CardPackResult {
 	readonly isNew: boolean;
 	readonly isSecondCopy: boolean;
 }
+
+export interface PackCardInfo {
+	readonly cardId: string;
+	readonly cardType: CollectionCardType;
+	readonly isNew: boolean;
+	readonly isSecondCopy: boolean;
+	readonly currencyAmount: number;
+	readonly mercenaryCardId: string;
+}
+export type CollectionCardType = 'NORMAL' | 'GOLDEN' | 'DIAMOND' | 'SIGNATURE';
 
 export interface InternalPackRow {
 	readonly id: number;
@@ -159,4 +166,5 @@ export interface InternalPackRow {
 	readonly card5MercenaryCardId: string;
 	readonly card5IsNew: boolean;
 	readonly card5IsSecondCopy: boolean;
+	readonly cardsJson: string;
 }
