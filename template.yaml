@@ -83,4 +83,5 @@ Resources:
                     Type: SQS
                     Properties:
                         Queue: !GetAtt SavePacksQueue.Arn
-                        # BatchSize: 1
+                        BatchSize: 60
+                        MaximumBatchingWindowInSeconds: 60

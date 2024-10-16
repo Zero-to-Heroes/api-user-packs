@@ -4,7 +4,6 @@ import { gzipSync } from 'zlib';
 import { getConnection } from './db/rds';
 
 export default async (event): Promise<any> => {
-	const mysql = await getConnection();
 	const escape = SqlString.escape;
 
 	const userInput = JSON.parse(event.body);
@@ -13,8 +12,10 @@ export default async (event): Promise<any> => {
 		return;
 	}
 
+	const mysql = await getConnection();
 	const userIds = await getAllUserIds(userInput.userId, userInput.userName, mysql);
 	if (!userIds?.length) {
+		await mysql.end();
 		return {
 			statusCode: 200,
 			isBase64Encoded: false,
