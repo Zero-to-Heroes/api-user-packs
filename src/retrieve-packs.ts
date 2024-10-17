@@ -1,7 +1,7 @@
+import { getConnectionProxy } from '@firestone-hs/aws-lambda-utils';
 import { BoosterType } from '@firestone-hs/reference-data';
 import SqlString from 'sqlstring';
 import { gzipSync } from 'zlib';
-import { getConnection } from './db/rds';
 
 export default async (event): Promise<any> => {
 	const escape = SqlString.escape;
@@ -12,7 +12,7 @@ export default async (event): Promise<any> => {
 		return;
 	}
 
-	const mysql = await getConnection();
+	const mysql = await getConnectionProxy();
 	const userIds = await getAllUserIds(userInput.userId, userInput.userName, mysql);
 	if (!userIds?.length) {
 		await mysql.end();

@@ -1,8 +1,8 @@
 /* eslint-disable @typescript-eslint/no-use-before-define */
+import { getConnectionProxy } from '@firestone-hs/aws-lambda-utils';
 import { AllCardsService } from '@firestone-hs/reference-data';
 import { ServerlessMysql } from 'serverless-mysql';
 import SqlString from 'sqlstring';
-import { getConnection } from './db/rds';
 import { Input } from './sqs-event';
 
 let allCards: AllCardsService;
@@ -17,11 +17,9 @@ export default async (event, context): Promise<any> => {
 		await allCards.initializeCardsDb();
 	}
 
-	const mysql = await getConnection();
+	console.debug('processing', events.length, 'events');
+	const mysql = await getConnectionProxy();
 	for (const ev of events) {
-		if (ev.userName === 'daedin') {
-			console.debug('processing event', ev);
-		}
 		await processEvent(ev, mysql);
 	}
 	await mysql.end();
